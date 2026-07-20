@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from jax.config import config
+from jax import config
 config.update("jax_enable_x64", True)
 #config.update('jax_platform_name', 'cpu')
 #import jax

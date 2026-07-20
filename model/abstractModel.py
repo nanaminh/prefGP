@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 from inference import laplace_generic as LAP
 from inference import laplace_sparse  as LAPsp
@@ -117,5 +116,3 @@ class abstractModelSparse(ABC):
             self.params = infer.params
             self._MAP = infer.MAP
             #print(infer.MAP)
-
-    

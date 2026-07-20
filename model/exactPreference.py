@@ -9,6 +9,12 @@ from scipy.stats import norm
 import jax.numpy as jnp
 from jax.scipy.stats import norm
 from utility.paramz import DictVectorizer
+# import logging 
+
+# # Configure logging
+# logging.basicConfig(level=logging.DEBUG)
+# logging.debug('A debug message')
+
 class exactPreference(abstractModelFull):
     
     def __init__(self,data,Kernel,params,inf_method='laplace'):
@@ -94,11 +100,44 @@ class exactPreference(abstractModelFull):
         A = self.PrefM .toarray()
         b = np.zeros((A.shape[0],1))
         # find initial feasible 
-        res = linprog(np.zeros(A.shape[1]),A_ub=-A,b_ub=-b, bounds=[[-1e-4,1]]*A.shape[1],method='interior-point' )
+        #res = linprog(np.zeros(A.shape[1]),A_ub=-A,b_ub=-b, bounds=[[-1e-4,1]]*A.shape[1],method='interior-point' )
+        res = linprog(np.zeros(A.shape[1]),A_ub=-A,b_ub=-b, bounds=[[-1e-4,1]]*A.shape[1],method='highs')
         x0 = res.x[:,None]#init point
         self.samples = slice_sampler.liness_step(x0, A, b, np.zeros(Kxx.shape[0]), 
                                             Kxx, nsamples= nsamples,  tune=tune, 
                                             progress=1-disable).T
+        print("Sampling completed. Shape of samples:", self.samples.shape)
        
 
+    def visualize_sampling(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
         
+        # self.samples shape: (n_objects, n_samples)
+        # Compute posterior statistics
+        mean_samples = np.mean(self.samples, axis=1)
+        std_samples = np.std(self.samples, axis=1)
+        
+        # Compute credible intervals
+        lower_ci = np.percentile(self.samples, 2.5, axis=1)
+        upper_ci = np.percentile(self.samples, 97.5, axis=1)
+
+        object_idx = np.arange(self.samples.shape[0])+10
+        
+        # Plot a subset of posterior samples (every 100th) as thin lines for uncertainty visualization
+        step = max(1, self.samples.shape[1] // 1000)  # Show ~100 traces
+
+        for i in range(0, self.samples.shape[1], step):
+            plt.plot(object_idx, self.samples[:, i], 'gray', alpha=0.3,linewidth=0.5)
+        
+        plt.xlabel("Objects", fontsize=12)
+        plt.ylabel("Latent function value", fontsize=12)
+        plt.title("Posterior samples of the latent function", fontsize=14)
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+
+        # Plot credible interval as shaded region
+        #plt.fill_between(object_idx, lower_ci, upper_ci, alpha=0.3, label='95% CI')
+        
+        # Plot posterior mean
+        plt.plot(object_idx, mean_samples, 'b-', linewidth=2, label='Mean')

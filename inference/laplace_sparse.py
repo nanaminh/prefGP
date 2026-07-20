@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from jax.config import config
+from jax import config
 config.update("jax_enable_x64", True)
 #config.update('jax_platform_name', 'cpu')
 from jax import grad,  jit, jacfwd, jacrev
